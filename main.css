@@ -1,0 +1,1107 @@
+html, body {
+    margin: 0; padding: 0; overflow: hidden;
+    background: #2c7a1a; /* зеленый фон */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    height: 100vh;
+  }
+  #gameCanvas {
+    display: block;
+    background: #2c7a1a;
+    margin: 0 auto;
+    touch-action: none;
+    image-rendering: auto;
+    width: 100vw;
+    height: 100vh;
+  }
+/* --- НОВЫЙ КОНТЕЙНЕР ДЛЯ ВСЕХ ПАНЕЛЕЙ --- */
+#uiContainer {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    transform: scale(0.8); /* Уменьшаем весь UI блок на 20% */
+    transform-origin: top left; /* Указываем точку, от которой происходит уменьшение */
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+/* --- НОВАЯ ВЫДВИЖНАЯ ПАНЕЛЬ ДЕЙСТВИЙ СО ЗДАНИЯМИ --- */
+#buildingActionsPanel {
+    position: fixed;
+    bottom: -100px; /* Изначально спрятана за экраном */
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 15px;
+    background: rgba(0, 0, 0, 0.85);
+    padding: 8px 18px;
+    border-radius: 12px 12px 0 0;
+    border: 2px solid #a08c00;
+    border-bottom: none;
+    z-index: 40;
+    transition: bottom 0.3s ease-in-out;
+    user-select: none;
+}
+
+#buildingActionsPanel.visible {
+    bottom: 0; /* Выдвигается на экран */
+}
+
+#buildingActionsPanel button {
+    font-size: 20px; /* Размер кнопок как в задании */
+    padding: 4px 12px;
+    background-color: #555;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+#buildingActionsPanel button:hover:not(:disabled) {
+    background-color: #777;
+}
+#buildingActionsPanel button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ИЗМЕНЕНО: Панели сделаны более компактными */
+#panel {
+    position: relative;
+    background: rgba(40, 40, 40, 0.7);
+    padding: 1px; /* Уменьшено */
+    border-radius: 5px; /* Уменьшено */
+    color: white;
+    font-family: monospace;
+    font-weight: bold;
+    display: flex;
+    gap: 1px; /* Уменьшено */
+    align-items: center;
+    user-select: none;
+    font-size: 7px; /* Уменьшено */
+    border: 1px solid #666; /* Уменьшено */
+    transition: border-color 0.3s, background-color 0.3s;
+}
+
+/* Уменьшаем все кнопки на основной панели */
+#panel button {
+    border: none;
+    border-radius: 3px; /* Уменьшено */
+    padding: 1px 3px; /* Уменьшено */
+    font-size: 8px; /* Уменьшено */
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5); /* Уменьшено */
+    transition: background-color 0.3s, opacity 0.3s; /* ДОБАВЛЕНО: Плавность для прозрачности */
+    background-color: #555;
+    white-space: nowrap;
+}
+#panel button:active {
+    background-color: #777;
+}
+
+/* ДОБАВЛЕНО: Стиль для недоступных кнопок на главной панели */
+#troopButtons button:disabled {
+    background-color: #333; /* Более темный серый */
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Отдельный стиль для кнопки "книги" */
+#toggleSpecialPanelsBtn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    font-size: 28px;
+    line-height: 40px;
+    text-align: center;
+    color: white;
+    font-weight: bold;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+    transition: background 0.2s;
+    background-color: #404040;
+}
+#toggleSpecialPanelsBtn:active {
+    background-color: #606060;
+}
+
+/* --- СТИЛИ ДЛЯ РЕЖИМА СТРОИТЕЛЬСТВА (ГОЛУБОЙ) --- */
+#panel.building-mode {
+    border-color: #00bfff;
+    background: rgba(0, 50, 70, 0.7);
+}
+
+#panel.building-mode button {
+    background-color: #006080;
+}
+#panel.building-mode button:active {
+    background-color: #008CBA;
+}
+
+  #gold-drop {
+    position: fixed;
+    font-size: 20px;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  #menu {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.75); /* Изменено смещение по Y */
+  background: rgba(0,0,0,0.8);
+  border-radius: 25px; /* Уменьшено */
+  padding: 15px 30px; /* Уменьшено */
+  color: white;
+  font-family: monospace;
+  font-weight: bold;
+  text-align: center;
+  z-index: 1001;
+  user-select: none;
+}
+    #menu h1 {
+    margin-bottom: 15px; /* Уменьшено */
+  }
+
+  @keyframes goldshine {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+    .game-title {
+    font-size: 38px;
+    margin-bottom: 25px;
+    font-weight: bold;
+    font-family: 'Arial Black', sans-serif;
+    background: linear-gradient(
+      120deg,
+      #fff8dc,
+      #ffd700,
+      #daa520,
+      #b8860b,
+      #ffd700,
+      #fff8dc
+    );
+    background-size: 300% auto;
+    color: transparent;
+    background-clip: text;
+    -webkit-background-clip: text;
+    animation: goldshine 5s ease-in-out infinite;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    transform: skewX(-15deg);
+    display: inline-block;
+    padding: 0 15px;
+}
+  #menu button {
+    display: block;
+    width: 190px; /* Слегка увеличено для баланса */
+    margin: 8px auto; /* Уменьшено */
+    background: #3a5a1a;
+    border: none;
+    border-radius: 10px; /* Уменьшено */
+    padding: 8px 0; /* Уменьшено */
+    font-size: 17px; /* Уменьшено */
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+    transition: background 0.2s;
+  }
+  #menu button:disabled {
+    background: #2a3a12;
+    cursor: default;
+  }
+  #menu button:hover:not(:disabled) {
+    background: #567a2a;
+  }
+  #leaderboardContainer {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 15;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  #leaderboard {
+  background: rgba(0,0,0,0.6);
+  border-radius: 8px;
+  padding: 5px 7px;
+  color: white;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 10px;
+  max-width: 103px;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  transform-origin: top center;
+}
+  #leaderboard h2 {
+  margin: 0 0 4px 0;
+  font-size: 11px;
+}
+  #leaderboard ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+#leaderboard li {
+  margin: 1px 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+  #leaderboardToggleBtn {
+  position: absolute;
+  bottom: -28px;
+  right: 5px;
+  width: 21px;
+  height: 21px;
+  font-size: 13px;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  transition: transform 0.3s ease-in-out;
+}
+
+  #leaderboardContainer.closed {
+    pointer-events: none;
+  }
+  #leaderboardContainer.closed > #leaderboard {
+    transform: translateY(-120%);
+    opacity: 0;
+  }
+  #leaderboardContainer.closed > #leaderboardToggleBtn {
+  pointer-events: auto;
+  transform: translateY(calc(-100% - 32px));
+}
+  #spawnToggleBtn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    font-size: 28px;
+    line-height: 40px;
+    text-align: center;
+    color: white;
+    font-weight: bold;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+    transition: background 0.2s, border 0.3s;
+  }
+  #spawnToggleBtn.active {
+    border: 2px solid #00bfff;
+  }
+  #spawnToggleBtn:active {
+    background: #567a2a;
+  }
+  #attackBtn, #defenseBtn, #holdPositionBtn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    font-size: 28px;
+    line-height: 40px;
+    text-align: center;
+    color: white;
+    font-weight: bold;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+    transition: background 0.2s;
+    margin-left: 8px;
+  }
+  #attackBtn:active, #defenseBtn:active {
+    background: #567a2a;
+  }
+  #attackBtn:disabled, #defenseBtn:disabled, #holdPositionBtn:disabled {
+    background: #2a3a12;
+    cursor: default;
+    opacity: 0.6;
+  }
+  #joystick {
+  position: fixed;
+  bottom: 10px;
+  left: 60px;
+  width: 120px;
+  height: 120px;
+  background: rgba(58, 90, 26, 0.7);
+  border-radius: 50%;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+  #joystick-base {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    background: #3a5a1a;
+    border-radius: 50%;
+  }
+  #joystick-thumb {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    background: #567a2a;
+    border-radius: 50%;
+    top: 25px;
+    left: 25px;
+    touch-action: none;
+  }
+/* --- ОБЩИЕ СТИЛИ ДЛЯ ВСЕХ ВЫДВИЖНЫХ ПАНЕЛЕЙ (УМЕНЬШЕНО НА 10%) --- */
+.extra-panel {
+    position: relative;
+    margin-top: 3px; /* Уменьшено */
+    width: fit-content;
+    opacity: 0;
+    max-height: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    pointer-events: none;
+    border-radius: 7px; /* Уменьшено */
+    padding: 0 2px;
+    display: flex;
+    gap: 2px;
+    user-select: none;
+    overflow: hidden;
+    transition: opacity 0.3s ease, transform 0.3s ease, max-height 0.3s ease, padding 0.3s ease, visibility 0.3s;
+}
+
+.extra-panel.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    max-height: 21px; /* ИЗМЕНЕНО: Подогнано под новую высоту кнопок */
+    padding: 2px;
+    pointer-events: auto;
+}
+
+.extra-panel button, #troopButtons button {
+    border: none;
+    border-radius: 4px; /* Уменьшено */
+    padding: 2px;
+    height: 17px; /* ИЗМЕНЕНО: Сплющено в 2 раза */
+    width: 54px;  /* ИЗМЕНЕНО: Расширено в 1.5 раза */
+    font-size: 8px; /* Уменьшено */
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    transition: background 0.2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Стили для кнопки "Отдать золото", чтобы она не менялась */
+#dropGold {
+    width: auto;
+    height: auto;
+    padding: 1px 3px;
+}
+
+/* Новые стили для содержимого кнопок */
+.unit-button-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* line-height: 1.1; */
+    pointer-events: none; /* Чтобы клики проходили на кнопку */
+}
+
+.unit-emoji {
+    font-size: 14px;
+}
+
+.unit-cost {
+    font-size: 9px;
+    font-weight: bold;
+    color: #ffd700; /* Золотой цвет по умолчанию */
+    transition: color 0.2s;
+}
+
+.unit-cost.unaffordable {
+    color: #ff4d4d; /* Красный цвет, если не хватает золота */
+}
+
+.extra-panel button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* --- ЗЕЛЕНАЯ ПАНЕЛЬ --- */
+#greenTroopsPanel {
+    background: rgba(0, 80, 20, 0.8);
+    border: 2px solid #006400;
+}
+#greenTroopsPanel button {
+    background-color: #007a2a;
+}
+#greenTroopsPanel button:active:not(:disabled) {
+    background-color: #009a4a;
+}
+#greenTroopsPanel button:disabled {
+    background-color: #004d1a;
+}
+
+/* --- ФИОЛЕТОВАЯ ПАНЕЛЬ --- */
+#specialTroopsPanel {
+    background: rgba(80, 0, 120, 0.8);
+    border: 2px solid #800080;
+}
+#specialTroopsPanel button {
+    background: #5a007a;
+}
+#specialTroopsPanel button:active:not(:disabled) {
+    background: #7a009a;
+}
+#specialTroopsPanel button:disabled {
+    background: #3a004a;
+}
+#specialTroopsPanel button.tombstone-locked {
+    background: #3a004a;
+}
+#specialTroopsPanel .infoText {
+    display: none;
+}
+
+/* --- ЖЕЛТАЯ ПАНЕЛЬ --- */
+#yellowTroopsPanel {
+    background: rgba(180, 130, 0, 0.8);
+    border: 2px solid #b8860b;
+}
+#yellowTroopsPanel button {
+    background-color: #daa520;
+}
+#yellowTroopsPanel button:active:not(:disabled) {
+    background-color: #ffd700;
+}
+#yellowTroopsPanel button:disabled {
+    background-color: #8b6508;
+}
+
+/* --- КРАСНАЯ ПАНЕЛЬ --- */
+#redTroopsPanel {
+    background: rgba(140, 0, 0, 0.8);
+    border: 2px solid #a00000;
+}
+#redTroopsPanel button {
+    background-color: #b22222;
+}
+#redTroopsPanel button:active:not(:disabled) {
+    background-color: #dc143c;
+}
+#redTroopsPanel button:disabled {
+    background-color: #8b0000;
+}
+
+/* --- НОВАЯ ПАНЕЛЬ ДЛЯ ЗОЛОТА --- */
+#goldDonationPanel {
+    background: rgba(40, 40, 40, 0.8);
+    border: 2px solid #ffd700; /* Желтая рамка */
+}
+#goldDonationPanel button {
+    background-color: #555;
+    color: #ffd700; /* Желтый текст */
+}
+#goldDonationPanel button:active:not(:disabled) {
+    background-color: #777;
+}
+#goldDonationPanel button:disabled {
+    background-color: #333;
+    opacity: 0.5;
+}
+
+/* --- НОВАЯ ЦЕНТРАЛЬНАЯ ПАНЕЛЬ УВЕДОМЛЕНИЙ --- */
+#limitationNotificationPanel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1002; /* Выше всего остального */
+    background: rgba(80, 20, 20, 0.9);
+    border: 2px solid #ff69b4;
+    border-radius: 10px;
+    padding: 15px 25px;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+    text-align: center;
+    pointer-events: none; /* Не мешает кликать */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+#limitationNotificationPanel.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+  /* --- Новый темно-зеленый фон меню с объектами --- */
+  #menuOverlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgb(0, 50, 0);
+    z-index: 1000;
+    user-select: none;
+  }
+  #menuOverlay .menuObjects {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 80px;
+    color: rgba(255, 0, 0, 0.7);
+    user-select: none;
+    pointer-events: none;
+    gap: 20px;
+    filter: drop-shadow(0 0 4px black);
+}
+  #menuOverlay .menuObjects span {
+    user-select: none;
+  }
+
+/* --- Индикатор золота --- */
+#goldDisplay {
+    position: fixed;
+    bottom: 85px;
+    right: 7px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    user-select: none;
+    z-index: 30;
+  }
+  #goldDisplay span {
+    display: inline-block;
+    transition: transform 0.3s ease-out, color 0.3s ease-out;
+  }
+  .gold-increase {
+    color: #2cfa1a;
+    transform: scale(1.25);
+  }
+  .gold-decrease {
+    color: #fa1a1a;
+    transform: scale(1.25);
+  }
+
+/* --- Индикатор войск --- */
+  #troopCountDisplay {
+    position: fixed;
+    bottom: 62px;
+    right: 7px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    user-select: none;
+    z-index: 30;
+  }
+  #troopCountDisplay span {
+    display: inline-block;
+    transition: transform 0.15s ease-out, color 0.15s ease-out;
+  }
+  .count-increase {
+    color: #2cfa1a;
+    transform: scale(1.6);
+  }
+  .count-decrease {
+    color: #fa1a1a;
+    transform: scale(1.6);
+  }
+
+/* --- ИЗМЕНЕННЫЕ СТИЛИ ДЛЯ МИНИКАРТЫ --- */
+  #minimapCanvas {
+      position: fixed;
+      bottom: 5px;
+      right: 5px;
+      width: 50px;
+      height: 50px;
+      border: 1px solid #999;
+      z-index: 29;
+      display: block;
+      background-color: black; /* ИЗМЕНЕНО: Фон теперь черный */
+  }
+
+  #minimapToggleBtn {
+      position: fixed;
+      bottom: 17.5px; /* ИЗМЕНЕНО: По центру карты по вертикали */
+      right: 60px;   /* ИЗМЕНЕНО: Слева от карты */
+      width: 25px;
+      height: 25px;
+      font-size: 16px;
+      padding: 0;
+      line-height: 25px;
+      z-index: 30;
+      cursor: pointer;
+      background-color: rgba(0,0,0,0.6);
+      color: white;
+      border: 1px solid #999;
+      border-radius: 5px;
+      text-align: center;
+      user-select: none;
+      -webkit-user-select: none;
+  }
+
+  /* --- Панель информации о здании (ИЗМЕНЕНО) --- */
+  #buildingInfoPanel {
+    position: absolute;
+    display: none;
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid #a08c00;
+    border-radius: 8px;
+    padding: 4px 8px;
+    color: white;
+    font-family: monospace;
+    font-size: 10px;
+    z-index: 50;
+    user-select: none;
+    width: 150px; /* ИЗМЕНЕНО: Сделано шире */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease-in-out, transform 0.1s ease-out;
+  }
+  #buildingInfoPanel h3 {
+    margin: 0 0 3px 0;
+    text-align: center;
+    color: #ffd700;
+    font-size: 12px;
+  }
+  #buildingInfoPanel p {
+    margin: 1px 0;
+    display: flex;
+    justify-content: space-between;
+  }
+  #buildingInfoPanel hr {
+    border: none;
+    border-top: 1px solid #a08c00;
+    margin: 3px 0;
+  }
+  #buildingInfoDescription {
+      text-align: center;
+      font-style: italic;
+      color: #cccccc;
+      padding: 3px 0;
+      white-space: normal; /* Разрешаем перенос текста */
+      word-wrap: break-word; /* Принудительный перенос, если слово не влезает */
+  }
+  .stat-increase {
+    color: #4CAF50;
+    font-weight: bold;
+  }
+  .stat-sell {
+    color: #fdd835;
+    font-weight: bold;
+  }
+  .stat-upgrade {
+    color: #fdd835;
+    font-weight: bold;
+  }
+  
+  /* --- ИЗМЕНЕНО: Панель информации о войске (теперь в центре и с прокруткой) --- */
+  #troopInfoPanel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: none;
+    background: rgba(0, 20, 0, 0.95);
+    border: 2px solid #4CAF50;
+    border-radius: 10px;
+    padding: 10px 15px;
+    color: white;
+    font-family: monospace;
+    font-size: 12px;
+    z-index: 1002;
+    user-select: none;
+    width: 280px; /* Немного шире для лучшего вида */
+    max-width: 90vw; /* Не вылезает за экран по ширине */
+    max-height: 85vh; /* Не вылезает за экран по высоте */
+    overflow-y: auto; /* Добавляет прокрутку, если контент не влезает */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+  }
+  #troopInfoPanel h3 {
+    margin: 0 0 8px 0; /* ИЗМЕНЕНО */
+    text-align: center;
+    color: #81C784;
+    font-size: 16px; /* ИЗМЕНЕНО */
+  }
+  #troopInfoPanel p {
+    margin: 4px 0; /* ИЗМЕНЕНО */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #troopInfoPanel hr {
+    border: none;
+    border-top: 1px solid #4CAF50;
+    margin: 6px 0; /* ИЗМЕНЕНО */
+  }
+  #troopInfoDescription {
+      justify-content: center;
+      text-align: center;
+      font-style: italic;
+      color: #cccccc;
+      padding: 4px 0; /* ИЗМЕНЕНО */
+      white-space: normal;
+  }
+
+  .limit-flash-pink {
+    color: #FF69B4 !important;
+    transform: scale(1.25);
+  }
+
+  #languageMenu button, #settingsMenu button, #nameMenu button {
+    display: block;
+    width: 220px;
+    margin: 10px auto;
+    background: #444;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 0;
+    font-size: 18px;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+    transition: background 0.2s;
+  }
+  #languageMenu button:hover, #settingsMenu button:hover, #nameMenu button:hover {
+    background: #666;
+  }
+
+  /* --- ДОБАВЛЕНО: Стили для новых меню (Скины, Коды) --- */
+  .menu-action-btn {
+    background: #3a5a1a; /* Зеленый фон */
+    border: none; /* Убран бордер */
+    border-radius: 10px;
+    color: white;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 14px; /* Слегка увеличен */
+    padding: 8px 12px; /* Увеличены отступы */
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+    transition: background-color 0.2s;
+  }
+  .menu-action-btn:hover {
+    background: #567a2a; /* Более светлый зеленый при наведении */
+  }
+
+  .new-game-menu {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.85);
+    border: 2px solid #999;
+    border-radius: 15px;
+    padding: 20px;
+    z-index: 1003;
+    color: white;
+    font-family: monospace;
+    text-align: center;
+    width: 300px;
+  }
+  .new-game-menu h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+  }
+  .new-game-menu input {
+    width: 80%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    border: 1px solid #555;
+    background: #333;
+    color: white;
+    text-align: center;
+  }
+  .new-game-menu button {
+    background: #555;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  .new-game-menu button:hover {
+    background: #777;
+  }
+  .close-menu-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 25px;
+    height: 25px;
+    padding: 0;
+    font-size: 14px;
+    line-height: 25px;
+    border-radius: 50%;
+  }
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .skin-option {
+    font-size: 32px;
+    padding: 5px;
+    background: #444;
+    border: 2px solid #666;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+    position: relative;
+  }
+  .skin-option:hover {
+    background-color: #555;
+  }
+  .skin-option.selected {
+    border-color: #ffd700;
+    box-shadow: 0 0 10px #ffd700;
+  }
+  .skin-option.locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .locked-label {
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    font-size: 9px;
+    color: #ffdddd;
+    background: rgba(0,0,0,0.7);
+    padding: 3px 3px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  /* --- СТИЛИ ДЛЯ СМЕНЫ ИНТЕРФЕЙСА (С КОРРЕКЦИЕЙ КНОПКИ) --- */
+  body.ui-swapped #joystick {
+    left: auto;
+    right: 60px;
+  }
+  body.ui-swapped #goldDisplay {
+    right: auto;
+    left: 7px;
+  }
+  body.ui-swapped #troopCountDisplay {
+    right: auto;
+    left: 7px;
+  }
+  body.ui-swapped #minimapCanvas {
+    right: auto;
+    left: 5px;
+  }
+  body.ui-swapped #minimapToggleBtn {
+    right: auto;
+    left: 60px; /* ИЗМЕНЕНО: Справа от карты */
+    bottom: 17.5px; /* ИЗМЕНЕНО: По центру карты по вертикали */
+  }
+
+  /* --- ДОБАВЛЕНО: Стили для экрана поражения --- */
+  #deathScreen {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #800000; /* Темно-красный */
+    z-index: 2000; /* Выше всего остального */
+    display: none; /* Изначально скрыт */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-family: monospace;
+  }
+  #deathScreen h1 {
+    font-size: 5.5vw;
+    color: #ff3333; /* Ярко-красный */
+    text-shadow: 3px 3px 6px black;
+    margin-bottom: 50px;
+  }
+  #deathScreen button {
+      background: #4d0000;
+      border: 2px solid #ff3333;
+      border-radius: 12px;
+      padding: 15px 35px;
+      font-size: 2.5vw;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.2s;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+  }
+  #deathScreen button:hover {
+      background: #660000;
+      transform: scale(1.05);
+  }
+
+  /* --- СТИЛИ ДЛЯ КНОПКИ УДАЛЕНИЯ ВОЙСК --- */
+  #deleteTroopBtn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      font-size: 28px;
+      line-height: 40px;
+      text-align: center;
+      color: white;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      cursor: pointer;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+      transition: background 0.2s;
+      margin-left: 8px;
+      background-color: #b22222; /* Красный фон */
+      border: none;
+  }
+  #deleteTroopBtn:active {
+      background-color: #dc143c; /* Ярко-красный при нажатии */
+  }
+
+  /* --- НОВЫЕ СТИЛИ ДЛЯ ПАНЕЛИ УДАЛЕНИЯ ВОЙСК --- */
+  #deleteTroopPanel {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 350px;
+      max-width: 90vw;
+      max-height: 70vh;
+      background: rgba(40, 40, 40, 0.95);
+      border: 2px solid #b22222; /* Красная рамка */
+      border-radius: 15px;
+      z-index: 1005; /* Выше других панелей */
+      color: white;
+      font-family: monospace;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.6);
+  }
+  #deleteTroopPanelHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 15px;
+      border-bottom: 1px solid #b22222;
+  }
+  #deleteTroopPanelHeader h2 {
+      margin: 0;
+      font-size: 14px;
+      text-align: left;
+      flex-grow: 1;
+      white-space: normal;
+      word-wrap: break-word;
+  }
+  #closeDeleteTroopPanelBtn {
+      background: #555;
+      border: none;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      cursor: pointer;
+      line-height: 25px;
+      padding: 0;
+      flex-shrink: 0;
+      margin-left: 10px;
+  }
+  #deleteTroopList {
+      padding: 10px;
+      overflow-y: auto; /* Ползунок */
+      flex-grow: 1;
+  }
+  .delete-troop-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 5px;
+      margin-bottom: 5px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background-color 0.2s, border-color 0.2s;
+  }
+  .delete-troop-item:hover {
+      background-color: rgba(255,0,0,0.2);
+      border-color: #b22222;
+  }
+
+/* --- ДОБАВЛЕНО: СТИЛИ ДЛЯ ВСПЛЫВАЮЩЕЙ ПОДСКАЗКИ --- */
+#buttonTooltip {
+    position: fixed; /* Позиция относительно окна браузера */
+    display: none;   /* По умолчанию скрыт */
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid #ffd700; /* Золотая рамка */
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: white;
+    font-family: monospace;
+    font-size: 12px;
+    z-index: 2000; /* Выше почти всего интерфейса */
+    user-select: none;
+    pointer-events: none; /* Подсказка не должна мешать кликам */
+    width: 250px;
+    max-width: 80vw;
+    text-align: center;
+    opacity: 0;
+    /* Начальное положение для анимации появления */
+    transform: translateY(10px); 
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+#buttonTooltip.visible {
+    display: block;
+    opacity: 1;
+    transform: translateY(0); /* Конечное положение */
+}
