@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="stylesheet" href="main.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<title>Игра Лорд и Войско</title>
+
+</head>
+<body>
+
+<!-- Меню выбора режима -->
+<div id="menu" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
+    <h1 id="menuTitle" class="game-title" data-translate-key="game_title" aria-label="EmojiLordz.io">EmojiLordz.io</h1>
+    <div id="mainMenuButtons">
+        <button id="btnName" data-translate-key="name_button">Имя</button>
+        <button id="btnOffline" data-translate-key="offline_button">Оффлайн</button>
+        <button id="btnOnline" data-translate-key="online_button_wip" disabled>Онлайн (в разработке)</button>
+        <button id="btnSettings" data-translate-key="settings_button">Настройки</button>
+        <button id="btnExit" data-translate-key="exit_button">Выход</button>
+    </div>
+    
+    <div id="settingsMenu" hidden>
+        <h2 data-translate-key="settings_title" style="font-size: 22px; margin-bottom: 15px;">Настройки</h2>
+        <button id="btnSwapUI" data-translate-key="joystick_pos_left">Джойстик: слева</button>
+        <button id="btnLanguage" data-translate-key="language_button">Язык</button>
+        <button id="btnBackToMainFromSettings" data-translate-key="back_button" style="margin-top: 15px; background: #555;">Назад</button>
+    </div>
+
+    <div id="languageMenu" hidden>
+        <h2 data-translate-key="language_title" style="font-size: 22px; margin-bottom: 15px;">Выберите язык</h2>
+        <button class="lang-btn" data-lang="ru">Русский</button>
+        <button class="lang-btn" data-lang="en">English</button>
+        <button class="lang-btn" data-lang="cn">中文</button>
+        <button id="btnBackToLang" data-translate-key="back_button" style="margin-top: 15px; background: #555;">Назад</button>
+    </div>
+
+    <div id="nameMenu" hidden>
+        <h2 data-translate-key="name_title" style="font-size: 22px; margin-bottom: 15px;">Введите ваше имя</h2>
+        <input type="text" id="nameInput" maxlength="16" style="width: 200px; padding: 8px; font-size: 16px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ccc; text-align: center;">
+        <button id="btnSaveName" data-translate-key="save_button">Сохранить</button>
+    </div>
+</div>
+
+<!-- Темно-зеленый фон меню с объектами -->
+<div id="menuOverlay">
+  <div class="menuObjects" aria-hidden="true">
+    <span title="Башня">🏰</span>
+    <span title="Демон">👹</span>
+    <span title="Скелет">💀</span>
+  </div>
+</div>
+
+<div id="topLeftUI" style="position: fixed; top: 50%; left: 15px; z-index: 1002; transform: translateY(-50%);">
+    <button id="skinsBtn" class="menu-action-btn" data-translate-key="skins_button">Скины</button>
+</div>
+
+<div id="topRightUI" style="position: fixed; top: 50%; right: 15px; z-index: 1002; transform: translateY(-50%);">
+    <button id="codesBtn" class="menu-action-btn" data-translate-key="codes_button">Коды</button>
+</div>
+
+<div id="skinsMenu" class="new-game-menu" hidden>
+    <h2 data-translate-key="skins_title">Скины</h2>
+    <div id="skinSelection" class="menu-grid">
+        </div>
+    <button class="close-menu-btn" data-target-menu="skinsMenu">X</button>
+</div>
+
+<div id="codesMenu" class="new-game-menu" hidden>
+    <h2 data-translate-key="codes_title">Коды</h2>
+    <input type="text" id="codeInput"> <button id="submitCodeBtn" data-translate-key="submit_code_button">Применить</button>
+    <p id="codeStatus" style="height: 1em;"></p>
+    <button class="close-menu-btn" data-target-menu="codesMenu">X</button>
+</div>
+
+<!-- Список лидеров -->
+<div id="leaderboardContainer">
+    <div id="leaderboard" aria-live="polite" aria-atomic="true" aria-label="Список лидеров">
+      <h2 data-translate-key="leaderboard_title">Лидеры 💰</h2>
+      <ul id="leaderboardList"></ul>
+    </div>
+    <button id="leaderboardToggleBtn">⛔</button>
+</div>
+
+<!-- Новый блок с фиолетовой рамочкой для скелетов, мышей и гроба -->
+<canvas id="gameCanvas" width="1600" height="900" aria-label="Игровое поле"></canvas>
+
+<div id="uiContainer">
+    <div id="panel" aria-live="polite" aria-atomic="true" hidden>
+        <button id="toggleSpecialPanelsBtn" title="Открыть/закрыть доп. панели">📖</button>
+    
+        <div id="troopButtons" style="display: flex; gap: 4px; align-items: center;">
+            <button id="summonSkeleton" aria-label="Призвать Обезьянку">
+                <div class="unit-button-content">
+                    <span class="unit-emoji">🐵</span>
+                    <span class="unit-cost" data-cost="50">50🪙</span>
+                </div>
+            </button>
+            <button id="summonMonkeyBomb" aria-label="Призвать Обезьянку с бомбой">
+                <div class="unit-button-content">
+                    <span class="unit-emoji">🐵💣</span>
+                    <span class="unit-cost" data-cost="100">100🪙</span>
+                </div>
+            </button>
+            <button id="summonArcher" aria-label="Призвать Обезьяну с луком">
+                <div class="unit-button-content">
+                    <span class="unit-emoji">🐵🏹</span>
+                    <span class="unit-cost" data-cost="175">175🪙</span>
+                </div>
+            </button>
+            <button id="dropGold" aria-label="Отдать/положить золото">💰</button>
+        </div>
+
+        <div id="buildButtons" style="display: none; gap: 8px; align-items: flex-start; text-align: center;">
+            <div style="text-align: center;">
+                <button id="buildTowerBtn" aria-label="Построить Башню 🏰 (750)">🏰 (750)</button>
+                <div id="towerLimitText" style="font-size: 9px; color: #a3d8ff; margin-top: 2px; transition: color 0.3s, transform 0.3s;">0/75</div>
+            </div>
+            <div style="text-align: center;">
+                <button id="buildMagicTowerBtn" aria-label="Построить Волшебную Башню 🏛️ (1000)">🏛️ (1000)</button>
+                <div id="magicTowerLimitText" style="font-size: 9px; color: #a3d8ff; margin-top: 2px; transition: color 0.3s, transform 0.3s;">0/25</div>
+            </div>
+            <div style="text-align: center;">
+                <button id="buildTombstoneBtn" aria-label="Построить Надгробие 🪦 (150)">🪦 (150)</button>
+                <div id="tombstoneLimitText" style="font-size: 9px; color: #a3d8ff; margin-top: 2px; transition: color 0.3s, transform 0.3s;">0/1</div>
+            </div>
+            <div style="text-align: center;">
+                <button id="buildHouseBtn" aria-label="Построить Дом 🏚️ (100)">🏚️ (100)</button>
+                <div id="houseLimitText" style="font-size: 9px; color: #a3d8ff; margin-top: 2px; transition: color 0.3s, transform 0.3s;">0/10</div>
+            </div>
+        </div>
+
+        <button id="spawnToggleBtn" aria-label="Переключить режим" title="Переключить на постройку/войска">🔁</button>
+        <button id="attackBtn" aria-label="Режим атаки" title="Режим нападения">❗</button>
+        <button id="defenseBtn" aria-label="Режим защиты" title="Режим защиты">❣️</button>
+        <button id="holdPositionBtn" aria-label="Режим 'Стоять на месте'" title="Режим 'Стоять на месте'">💤</button>
+        <button id="teamSwitchBtn" title="Сменить команду">🌝</button>
+        <button id="deleteTroopBtn" title="Удалить войска">🚮</button>
+    </div>
+
+    <div id="greenTroopsPanel" class="extra-panel" aria-label="Войска ближнего боя">
+        <button id="summonMonkeyWithSword" data-type="monkeyWithSword" aria-label="Призвать Обезьяну с мечом">
+            <div class="unit-button-content">
+                <span class="unit-emoji">🐵🗡️</span>
+                <span class="unit-cost" data-cost="100">100🪙</span>
+            </div>
+        </button>
+        <button id="summonRam" data-type="ram" aria-label="Призвать Таран">
+            <div class="unit-button-content">
+                <span class="unit-emoji">🪵</span>
+                <span class="unit-cost" data-cost="200">200🪙</span>
+            </div>
+        </button>
+    </div>
+
+    <div id="specialTroopsPanel" class="extra-panel" aria-label="Особые войска - требуют Надгробия">
+        <button id="summonSkeletonSpecial" data-type="skeleton" aria-label="Призвать Скелетика">
+            <div class="unit-button-content">
+                <span class="unit-emoji">💀</span>
+                <span class="unit-cost" data-cost="10">10🪙</span>
+            </div>
+        </button>
+        <button id="summonZombieLeaderSpecial" data-type="zombieLeader" aria-label="Призвать Зомби-вожатого">
+            <div class="unit-button-content">
+                <span class="unit-emoji">🧟</span>
+                <span class="unit-cost" data-cost="70">70🪙</span>
+            </div>
+        </button>
+        <button id="summonGhostSpecial" data-type="ghost" aria-label="Призвать Призрака">
+            <div class="unit-button-content">
+                <span class="unit-emoji">👻</span>
+                <span class="unit-cost" data-cost="200">200🪙</span>
+            </div>
+        </button>
+        <button id="summonBatSpecial" data-type="bat" aria-label="Призвать Летучих мышей">
+            <div class="unit-button-content">
+                <span class="unit-emoji">🦇</span>
+                <span class="unit-cost" data-cost="150">150🪙</span>
+            </div>
+        </button>
+        <button id="summonCoffinSpecial" data-type="coffin" aria-label="Призвать Гроб">
+            <div class="unit-button-content">
+                <span class="unit-emoji">⚰️</span>
+                <span class="unit-cost" data-cost="50">50🪙</span>
+            </div>
+        </button>
+        <button id="summonVampireSpecial" data-type="vampire" aria-label="Призвать Вампира">
+            <div class="unit-button-content">
+                <span class="unit-emoji">🧛</span>
+                <span class="unit-cost" data-cost="175">175🪙</span>
+            </div>
+        </button>
+    </div>
+    
+    <div id="yellowTroopsPanel" class="extra-panel" aria-label="Элитные войска">
+        <button id="summonDragon" data-type="dragon" aria-label="Призвать Дракона">
+            <div class="unit-button-content">
+                <span class="unit-emoji">🐲</span>
+                <span class="unit-cost" data-cost="1500">1500🪙</span>
+            </div>
+        </button>
+        <button id="summonDemon" data-type="demon" aria-label="Призвать Демона">
+            <div class="unit-button-content">
+                <span class="unit-emoji">👹</span>
+                <span class="unit-cost" data-cost="3000">3000🪙</span>
+            </div>
+        </button>
+    </div>
+    
+<div id="redTroopsPanel" class="extra-panel" aria-label="Легендарные войска">
+    <button id="summonGoldenSkeleton" data-type="goldenSkeleton" aria-label="Призвать Золотого Скелетика">
+        <div class="unit-button-content">
+            <span class="unit-emoji">💀</span>
+            <span class="unit-cost" data-cost="10">10🪙</span>
+        </div>
+    </button>
+    <button id="summonCursedCoffin" data-type="cursedCoffin" aria-label="Призвать Проклятый Гроб">
+        <div class="unit-button-content">
+            <span class="unit-emoji">⚰️</span>
+            <span class="unit-cost" data-cost="5000">5000🪙</span>
+        </div>
+    </button>
+    <button id="summonHugeBat" data-type="hugeBat" aria-label="Призвать Огромную Летучую Мышь">
+        <div class="unit-button-content">
+            <span class="unit-emoji">🦇</span>
+            <span class="unit-cost" data-cost="250">250🪙</span>
+        </div>
+    </button>
+    <button id="summonTrueDragon" data-type="trueDragon" aria-label="Призвать Истинного дракона">
+        <div class="unit-button-content">
+            <span class="unit-emoji">🐉</span>
+            <span class="unit-cost" data-cost="4500">4500🪙</span>
+        </div>
+    </button>
+    <button id="summonTrueDemon" data-type="trueDemon" aria-label="Призвать Истинного демона">
+        <div class="unit-button-content">
+            <img scr="sprite1.png" class="unit-emoji">
+            <span class="unit-cost" data-cost="33500">33500🪙</span>
+        </div>
+    </button>
+</div>
+
+<div id="goldDonationPanel" class="extra-panel" aria-label="Отдать золото">
+    <button class="donate-btn" data-amount="5">5 🪙</button>
+    <button class="donate-btn" data-amount="10">10 💰</button>
+    <button class="donate-btn" data-amount="25">25 💰</button>
+    <button class="donate-btn" data-amount="50">50 💰</button>
+    <button class="donate-btn" data-amount="100">100 💰</button>
+    <button class="donate-btn" data-amount="250">250 💰</button>
+    <button class="donate-btn" data-amount="500">500 💰</button>
+    <button class="donate-btn" data-amount="1000">1000 💰</button>
+    <button class="donate-btn" data-amount="5000">5000 💰</button>
+    <button class="donate-btn" data-amount="10000">10000 💰</button>
+</div>
+
+<div id="limitationNotificationPanel">
+    </div>
+</div>
+
+<!-- Джойстик -->
+<div id="joystick" aria-label="Джойстик управления">
+  <div id="joystick-base">
+    <div id="joystick-thumb" tabindex="0"></div>
+  </div>
+</div>
+
+<!-- Индикатор войск внизу справа -->
+<div id="goldDisplay" aria-live="polite" aria-atomic="true" aria-label="Количество золота">
+  💰 <span id="goldCount">10000000</span>
+</div>
+
+<div id="troopCountDisplay" aria-live="polite" aria-atomic="true" aria-label="Количество войск">
+  <span data-translate-key="troop_count_label">Войска</span>: <span id="currentTroops">0</span> / <span id="maxTroops">100</span>
+</div>
+
+<canvas id="minimapCanvas" width="50" height="50"></canvas>
+<button id="minimapToggleBtn">🍾</button>
+
+<div id="buildingInfoPanel">
+  <h3 id="buildingInfoName"></h3>
+  <div id="buildingInfoStats">
+    <p><span data-translate-key="stat_level">Уровень</span>: <span id="buildingInfoLevel"></span></p>
+    <p><span data-translate-key="stat_health">Прочность</span>: <span id="buildingInfoHP"></span></p>
+    <p id="buildingInfoDamageRow"><span data-translate-key="stat_damage">Урон</span>: <span id="buildingInfoDamage"></span></p>
+    <p id="buildingInfoAttackSpeedRow"><span data-translate-key="stat_attack_speed">Скорость атаки</span>: <span id="buildingInfoAttackSpeed"></span></p>
+    <p id="buildingInfoRadiusRow"><span data-translate-key="stat_radius">Радиус</span>: <span id="buildingInfoRadius"></span></p>
+  </div>
+  <p id="buildingInfoDescription"></p>
+  <hr id="buildingInfoSeparator">
+  <p><span data-translate-key="stat_sell">Продажа</span>: <span id="buildingInfoSell"></span></p>
+  <p><span data-translate-key="stat_repair">Починка</span>: <span id="buildingInfoRepair"></span></p>
+  <p><span data-translate-key="stat_upgrade">Улучшение</span>: <span id="buildingInfoUpgrade"></span></p>
+  </div>
+
+<div id="buildingActionsPanel">
+    <button id="upgradeBuildingBtn" title="Улучшить здание">🔺</button>
+    <button id="repairBuildingBtn" title="Починить здание">🔨</button>
+    <button id="sellBuildingBtn" title="Продать здание">🗑️</button>
+</div>
+
+<div id="troopInfoPanel">
+  <h3 id="troopInfoName"></h3>
+  <p><span data-translate-key="stat_cost">Стоимость</span>: <span id="troopInfoCost"></span></p>
+  <p><span data-translate-key="stat_health">Прочность</span>: <span id="troopInfoHP"></span></p>
+  <p><span data-translate-key="stat_slots">Место</span>: <span id="troopInfoSlots"></span></p>
+  <hr>
+  <p id="troopInfoDamageRow"><span data-translate-key="troop_damage_long">Урон (Войска/Здания/Лорд)</span>: <span id="troopInfoDamage"></span></p>
+  <p id="troopInfoAttackSpeedRow"><span data-translate-key="stat_attack_speed">Скорость атаки</span>: <span id="troopInfoAttackSpeed"></span></p>
+  <p id="troopInfoHpLossRow"><span data-translate-key="stat_attack_effect">Эффект атаки</span>: <span id="troopInfoHpLoss"></span></p>
+  <hr>
+  <p id="troopInfoDescription"></p>
+</div>
+
+<div id="deathScreen">
+  <h1 data-translate-key="death_screen_title">Вас Уничтожили</h1>
+  <button id="restartBtn" data-translate-key="restart_button">Начать заново</button>
+</div>
+
+<div id="deleteTroopPanel" style="display: none;">
+  <div id="deleteTroopPanelHeader">
+    <h2 data-translate-key="delete_troop_title"></h2>
+    <button id="closeDeleteTroopPanelBtn">X</button>
+  </div>
+  <div id="deleteTroopList">
+    </div>
+</div>
+
+<div id="buttonTooltip"></div>
+
+<script src="main.js"></script>
+
+</body>
+</html>
